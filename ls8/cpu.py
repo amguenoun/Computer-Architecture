@@ -70,4 +70,19 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        # Instruction Handlers
+        HLT = 0b00000001
+
+        running = True
+
+        while running:
+            # grab from memory - an instruction register
+            mem = self.ram[self.pc]
+
+            # memory logic here
+            if mem == HLT:
+                running = False
+            else:
+                print(f'Intruction {mem} unknown')
+
+            self.pc += 1
