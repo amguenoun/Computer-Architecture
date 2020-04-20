@@ -72,6 +72,8 @@ class CPU:
         """Run the CPU."""
         # Instruction Handlers
         HLT = 0b00000001
+        LDI = 0b10000010
+        PRN = 0b01000111
 
         running = True
 
@@ -79,9 +81,21 @@ class CPU:
             # grab from memory - an instruction register
             mem = self.ram[self.pc]
 
-            # memory logic here
             if mem == HLT:
+                # Halts loop
                 running = False
+            elif mem == LDI:
+                # Sets specified register to specified value
+                reg_address = self.ram[self.pc + 1]
+                value = self.ram[self.pc + 2]
+                self.reg[reg_address] = value
+                self.pc += 2
+            elif mem == PRN:
+                # Prints value stored in given register
+                reg_address = self.ram[self.pc + 1]
+                print(self.reg[reg_address])
+                self.pc += 1
+
             else:
                 print(f'Intruction {mem} unknown')
 
