@@ -35,7 +35,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == 'MUL':
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -71,12 +72,14 @@ class CPU:
         HLT = 0b00000001
         LDI = 0b10000010
         PRN = 0b01000111
+        MUL = 0b10100010
 
         running = True
 
         while running:
             # grab from memory - an instruction register
             mem = self.ram[self.pc]
+            increment = ((mem & 0b11000000) >> 6 ) + 1
 
             if mem == HLT:
                 # Halts loop
@@ -86,14 +89,15 @@ class CPU:
                 reg_address = self.ram[self.pc + 1]
                 value = self.ram[self.pc + 2]
                 self.reg[reg_address] = value
-                self.pc += 2
             elif mem == PRN:
                 # Prints value stored in given register
                 reg_address = self.ram[self.pc + 1]
                 print(self.reg[reg_address])
-                self.pc += 1
-
+            elif mem == MUL:
+                reg_address_a = self.ram[self.pc + 1]
+                reg_address_b = self.ram[self.pc + 2]
+                self.alu('MUL', reg_address_a, reg_address_b )
             else:
                 print(f'Intruction {mem} unknown')
 
-            self.pc += 1
+            self.pc += increment
