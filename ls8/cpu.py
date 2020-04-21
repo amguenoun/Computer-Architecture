@@ -11,6 +11,12 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = 0
+        self.branchtable = {}
+        self.branchtable[0b00000001] = self.handle_HLT
+        self.branchtable[0b10000010] = self.handle_LDI
+        self.branchtable[0b01000111] = self.handle_PRN
+        self.branchtable[0b10100010] = self.handle_MUL
+        
 
     def load(self):
         """Load a program into memory."""
@@ -35,7 +41,8 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == 'MUL':
+            self.reg[reg_a] *= self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -65,35 +72,34 @@ class CPU:
 
         print()
 
+    def handle_HLT(self):
+        sys.exit()
+
+    def handle_LDI(self):
+        reg_address = self.ram[self.pc + 1]
+        value = self.ram[self.pc + 2]
+        self.reg[reg_address] = value
+    
+    def handle_PRN(self):
+        reg_address = self.ram[self.pc + 1]
+        print(self.reg[reg_address])
+    
+    def handle_MUL(self):
+        reg_address_a = self.ram[self.pc + 1]
+        reg_address_b = self.ram[self.pc + 2]
+        self.alu('MUL', reg_address_a, reg_address_b )
+
     def run(self):
         """Run the CPU."""
-        # Instruction Handlers
-        HLT = 0b00000001
-        LDI = 0b10000010
-        PRN = 0b01000111
 
-        running = True
-
-        while running:
+        while True:
             # grab from memory - an instruction register
             mem = self.ram[self.pc]
+            increment = ((mem & 0b11000000) >> 6 ) + 1
 
-            if mem == HLT:
-                # Halts loop
-                running = False
-            elif mem == LDI:
-                # Sets specified register to specified value
-                reg_address = self.ram[self.pc + 1]
-                value = self.ram[self.pc + 2]
-                self.reg[reg_address] = value
-                self.pc += 2
-            elif mem == PRN:
-                # Prints value stored in given register
-                reg_address = self.ram[self.pc + 1]
-                print(self.reg[reg_address])
-                self.pc += 1
-
+            if mem in self.branchtable:
+                self.branchtable[mem]()
             else:
                 print(f'Intruction {mem} unknown')
 
-            self.pc += 1
+            self.pc += increment
