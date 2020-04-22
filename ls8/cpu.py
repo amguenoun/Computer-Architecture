@@ -21,9 +21,7 @@ class CPU:
         self.branchtable[0b10100001] = self.handle_SUB
         self.branchtable[0b01100101] = self.handle_INC
         self.branchtable[0b01100110] = self.handle_DEC
-
-
-        
+        self.branchtable[0b01000101] = self.handle_PUSH
 
     def load(self):
         """Load a program into memory."""
@@ -127,8 +125,15 @@ class CPU:
         reg_address_a = self.ram[self.pc + 1]
         self.alu('DEC', reg_address_a)
 
+    def handle_PUSH(self):
+        self.reg[7] -= 1
+        reg_address = self.ram[self.pc + 1]
+        value = self.reg[reg_address]
+        self.ram[self.reg[7]] = value
+        
     def run(self):
         """Run the CPU."""
+        self.reg[7] = 0xF4
 
         while True:
             # grab from memory - an instruction register
