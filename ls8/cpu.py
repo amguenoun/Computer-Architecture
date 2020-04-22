@@ -22,6 +22,7 @@ class CPU:
         self.branchtable[0b01100101] = self.handle_INC
         self.branchtable[0b01100110] = self.handle_DEC
         self.branchtable[0b01000101] = self.handle_PUSH
+        self.branchtable[0b01000110] = self.handle_POP
 
     def load(self):
         """Load a program into memory."""
@@ -130,6 +131,12 @@ class CPU:
         reg_address = self.ram[self.pc + 1]
         value = self.reg[reg_address]
         self.ram[self.reg[7]] = value
+
+    def handle_POP(self):
+        value = self.ram[self.reg[7]]
+        reg_address = self.ram[self.pc +1]
+        self.ram[reg_address] = value
+        self.reg[7] += 1
         
     def run(self):
         """Run the CPU."""
