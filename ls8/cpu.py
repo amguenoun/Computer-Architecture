@@ -24,6 +24,7 @@ class CPU:
         self.branchtable[0b01000101] = self.handle_PUSH
         self.branchtable[0b01000110] = self.handle_POP
         self.branchtable[0b01010000] = self.handle_CALL
+        self.branchtable[0b00010001] = self.handle_RET
 
     def load(self):
         """Load a program into memory."""
@@ -149,10 +150,14 @@ class CPU:
         reg_number = self.ram[self.pc + 1]
         destination = self.reg[reg_number]
 
-        pc = destination
-        #NEED TO +/- ONE
+        pc = destination - 1
 
+    def handle_RET(self):
+        return_address = self.ram[self.reg[7]]
+        self.reg[7] += 1
 
+        self.pc = return_address - 1
+        
     def run(self):
         """Run the CPU."""
         self.reg[7] = 0xF4
