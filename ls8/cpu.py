@@ -23,6 +23,7 @@ class CPU:
         self.branchtable[0b01100110] = self.handle_DEC
         self.branchtable[0b01000101] = self.handle_PUSH
         self.branchtable[0b01000110] = self.handle_POP
+        self.branchtable[0b01010000] = self.handle_CALL
 
     def load(self):
         """Load a program into memory."""
@@ -138,6 +139,20 @@ class CPU:
         self.ram[reg_address] = value
         self.reg[7] += 1
         
+    def handle_CALL(self):
+        #address of instruction after call is pushed onto stack
+        self.reg[7] -= 1
+        return_address = self.ram[self.pc + 2]
+        self.ram[self.reg[7]] = return_address
+
+        #set pc to call operand
+        reg_number = self.ram[self.pc + 1]
+        destination = self.reg[reg_number]
+
+        pc = destination
+        #NEED TO +/- ONE
+
+
     def run(self):
         """Run the CPU."""
         self.reg[7] = 0xF4
