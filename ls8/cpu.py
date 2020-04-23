@@ -23,6 +23,8 @@ class CPU:
         self.branchtable[0b01100110] = self.handle_DEC
         self.branchtable[0b01000101] = self.handle_PUSH
         self.branchtable[0b01000110] = self.handle_POP
+        self.branchtable[0b01010000] = self.handle_CALL
+        self.branchtable[0b00010001] = self.handle_RET
 
     def load(self):
         """Load a program into memory."""
@@ -37,7 +39,7 @@ class CPU:
         for line in file:
             if not line[0] == '#' and not len(line.strip()) == 0:
                 program.append(int(line.strip()[:8], 2))
-
+                
         for instruction in program:
             self.ram[address] = instruction
             address += 1
@@ -138,6 +140,24 @@ class CPU:
         self.ram[reg_address] = value
         self.reg[7] += 1
         
+    def handle_CALL(self):
+        #address of instruction after call is pushed onto stack
+        return_address = self.pc + 2
+        self.reg[7] -= 1
+        self.ram[self.reg[7]] = return_address
+
+        #set pc to call operand
+        reg_number = self.ram[self.pc + 1]
+        destination = self.reg[reg_number]
+
+        self.pc = destination 
+
+    def handle_RET(self):
+        return_address = self.ram[self.reg[7]]
+        self.reg[7] += 1
+
+        self.pc = return_address
+        
     def run(self):
         """Run the CPU."""
         self.reg[7] = 0xF4
@@ -146,10 +166,13 @@ class CPU:
             # grab from memory - an instruction register
             mem = self.ram[self.pc]
             increment = ((mem & 0b11000000) >> 6 ) + 1
+            jumping = ((mem & 0b00010000) >> 4 )
 
             if mem in self.branchtable:
                 self.branchtable[mem]()
             else:
                 print(f'Intruction {mem} unknown')
+                break
 
-            self.pc += increment
+            if not jumping:
+                self.pc += increment
